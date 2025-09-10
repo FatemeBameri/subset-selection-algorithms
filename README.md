@@ -1,1 +1,34 @@
 # subset-selection-algorithms
+
+This repository provides implementations of **subset selection algorithms** based on **Determinantal Point Processes (DPPs)**.  
+These methods are useful for selecting diverse and representative subsets of data, especially in machine learning and AI applications.
+
+---
+
+## Files
+
+### 1. `GreedyKDppSamplerGPU.py`
+Implementation of a **Greedy k-DPP Sampler** that leverages **GPU acceleration** for faster computations.  
+It is well-suited for large-scale datasets where efficiency is critical.
+
+### 2. `kDPP_example.py`
+A simple example demonstrating how to use **k-DPPs** for subset selection.  
+This script is a good starting point to understand the workflow of the algorithm.
+
+### 3. `README.md`
+This documentation file, providing an overview of the project and instructions.
+
+---
+
+## Applications
+- Selecting diverse samples for machine learning  
+- Data summarization or representative selection  
+- Reducing dataset size while maintaining diversity  
+
+---
+
+## Usage
+
+Run the basic example:
+```bash
+python kDPP_example.py
