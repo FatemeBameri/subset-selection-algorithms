@@ -15,9 +15,6 @@ It is well-suited for large-scale datasets where efficiency is critical.
 A simple example demonstrating how to use **k-DPPs** for subset selection.  
 This script is a good starting point to understand the workflow of the algorithm.
 
-### 3. `README.md`
-This documentation file, providing an overview of the project and instructions.
-
 ---
 
 ## Applications
