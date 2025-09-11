@@ -19,6 +19,9 @@ This script is a good starting point to understand the workflow of the algorithm
 Implementation of an **Approximate CLARANS Sampler** that leverages **GPU acceleration** for faster computations.  
 It is well-suited for large-scale datasets where efficiency and memory usage are critical.
 
+### 4. `CoverageCentricCoreSampler.py`
+Implementation of a **Coverage-Centric Coreset Sampler** that supports **random**, **monotonic**, and **stratified sampling** strategies.
+
 ---
 
 ## Applications
