@@ -27,9 +27,3 @@ This implementation is **adapted from the original code** available on GitHub: [
 - Reducing dataset size while maintaining diversity  
 
 ---
-
-## Usage
-
-Run the basic example:
-```bash
-python kDPP_example.py
