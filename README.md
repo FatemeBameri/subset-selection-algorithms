@@ -19,11 +19,15 @@ It is well-suited for large-scale datasets where efficiency and memory usage are
 Implementation of a **Coverage-Centric Coreset Sampler** that supports **random**, **monotonic**, and **stratified sampling** strategies.  
 This implementation is **adapted from the original code** available on GitHub: [Coverage-Centric Coreset](https://github.com/haizhongzheng/Coverage-centric-coreset-selection/tree/main) and has been integrated into this project.
 
+### 4. `KMedoidsSampler.py`
+Implementation of a **K-Medoids Sampler** that leverages **GPU acceleration** and **batch-wise distance computation** to efficiently handle large datasets.  
+It preserves the property that **medoids are actual data points** and safely manages **tuple or numpy features**, making it suitable for coreset selection in high-dimensional feature spaces.
+
+
 ---
 
 ## Applications
 - Selecting diverse samples for machine learning  
 - Data summarization or representative selection  
-- Reducing dataset size while maintaining diversity  
-
----
+- Reducing dataset size while maintaining diversity
+  
