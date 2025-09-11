@@ -11,15 +11,11 @@ These methods are useful for selecting diverse and representative subsets of dat
 Implementation of a **Greedy k-DPP Sampler** that leverages **GPU acceleration** for faster computations.  
 It is well-suited for large-scale datasets where efficiency is critical.
 
-### 2. `kDPP_example.py`
-A simple example demonstrating how to use **k-DPPs** for subset selection.  
-This script is a good starting point to understand the workflow of the algorithm.
-
-### 3. `ApproxCLARANSSampler.py`
+### 2. `ApproxCLARANSSampler.py`
 Implementation of an **Approximate CLARANS Sampler** that leverages **GPU acceleration** for faster computations.  
 It is well-suited for large-scale datasets where efficiency and memory usage are critical.
 
-### 4. `CoverageCentricCoreSampler.py`
+### 3. `CoverageCentricCoreSampler.py`
 Implementation of a **Coverage-Centric Coreset Sampler** that supports **random**, **monotonic**, and **stratified sampling** strategies.
 
 ---
