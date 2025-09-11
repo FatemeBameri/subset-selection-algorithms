@@ -3,7 +3,6 @@ import numpy as np
 import tqdm
 from typing import Union, Optional
 
-
 class GreedyKDppSamplerGPU:
     def __init__(
         self,
