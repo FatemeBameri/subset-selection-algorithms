@@ -23,6 +23,9 @@ This implementation is **adapted from the original code** available on GitHub: [
 Implementation of a **K-Medoids Sampler** that leverages **GPU acceleration** and **batch-wise distance computation** to efficiently handle large datasets.  
 It preserves the property that **medoids are actual data points** and safely manages **tuple or numpy features**, making it suitable for coreset selection in high-dimensional feature spaces.
 
+### 5. `MRC.py`
+Implementation of a **Minimum Redundancy Constraint** that leverages **GPU acceleration** to enable efficient and scalable subset selection in large feature spaces.
+This is an unofficial implementation inspired by the paper:**Unsupervised surface defect detection using dictionary-based sparse representation**
 
 ---
 
