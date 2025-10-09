@@ -6,10 +6,6 @@ from pyclustering.cluster.clarans import clarans
 class AutoDeviceApproxCLARANSSampler:
     """
     Approximate CLARANS استاندارد با Auto CPU/GPU
-    - مدویدهای واقعی
-    - Approximation اصولی از طریق subset تصادفی
-    - فاصله‌ها روی GPU در صورت موجود بودن
-    - جلوگیری از خطای تعداد medoid بیشتر از subset
     """
 
     def __init__(self, percentage: float, numlocal: int = 3, maxneighbor: int = 20,
