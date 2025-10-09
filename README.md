@@ -1,6 +1,6 @@
 # subset-selection-algorithms
 
-This repository provides implementations of **subset selection algorithms** based on **Determinantal Point Processes (DPPs), CLARANS Sampler, Coverage-Centric Coreset Sampler, K-Medoids Sampler, Minimum Redundancy Constraint sampler**.  
+This repository provides implementations of **subset selection algorithms** based on **Determinantal Point Processes, CLARANS Sampler, Coverage-Centric Coreset Sampler, K-Medoids Sampler, Minimum Redundancy Constraint sampler**.  
 These methods are useful for selecting diverse and representative subsets of data, especially in machine learning and AI applications.
 
 ---
