@@ -25,10 +25,11 @@ It preserves the property that **medoids are actual data points** and safely man
 
 ### 5. `MRC.py`
 Implementation of a **Minimum Redundancy Constraint sampler** that leverages **GPU acceleration** to enable efficient and scalable subset selection in large feature spaces.
-This is an unofficial implementation inspired by the paper: **Unsupervised surface defect detection using dictionary-based sparse representation**.nnn
+This is an unofficial implementation inspired by the paper: **Unsupervised surface defect detection using dictionary-based sparse representation**.
 
 ### 6. `MRMC.py`
-Implementation of a Maximum Reduction as Maximum Contribution sampler. This is an unofficial implementation inspired by the paper: Efficient Core-set Selection for Deep Learning Through Squared Loss Minimization.
+Implementation of a **Maximum Reduction as Maximum Contribution sampler**. This is an unofficial implementation inspired by the paper: **Efficient Core-set Selection for Deep Learning Through Squared Loss Minimization.**
+
 ---
 
 ## Applications
