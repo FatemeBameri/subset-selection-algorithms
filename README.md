@@ -1,6 +1,6 @@
 # subset-selection-algorithms
 
-This repository provides implementations of **subset selection algorithms** based on **Determinantal Point Processes, CLARANS Sampler, Coverage-Centric Coreset Sampler, K-Medoids Sampler, Minimum Redundancy Constraint sampler**.  
+This repository provides implementations of **subset selection algorithms** based on **Determinantal Point Processes, CLARANS Sampler, Coverage-Centric Coreset Sampler, K-Medoids Sampler, Minimum Redundancy Constraint sampler, Maximum Reduction as Maximum Contribution sampler**.  
 These methods are useful for selecting diverse and representative subsets of data, especially in machine learning and AI applications.
 
 ---
@@ -27,6 +27,8 @@ It preserves the property that **medoids are actual data points** and safely man
 Implementation of a **Minimum Redundancy Constraint sampler** that leverages **GPU acceleration** to enable efficient and scalable subset selection in large feature spaces.
 This is an unofficial implementation inspired by the paper: **Unsupervised surface defect detection using dictionary-based sparse representation**
 
+### 6. `MRMC.py`
+Implementation of a **Maximum Reduction as Maximum Contribution sampler**. This is an unofficial implementation inspired by the paper: **Efficient Core-set Selection for Deep Learning Through Squared Loss Minimization**
 ---
 
 ## Applications
