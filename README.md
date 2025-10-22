@@ -39,7 +39,9 @@ These scripts provide supporting functionality used throughout the project.
 ## Files
 
 ### 1. `extract_train_features.py`
-This implementation extracts intermediate feature maps from layers 2 and 3 of a pre-trained ResNet backbone, upsamples and concatenates them to form a 1024-dimensional feature representation for each training image in every class of the MVTec dataset.
+This implementation extracts intermediate feature representations from layers 2 and 3 of a pre-trained ResNet backbone.
+The feature maps from these layers are first aligned via upsampling and then concatenated to construct a unified 1024-dimensional feature vector for each training image across all classes in the MVTec dataset.
+The extracted features can be downloaded from the following link:[https://drive.google.com/file/d/1iYrwtoHqGw3H5_R40UVenhR0hb1AJdQt/view?usp=drive_link]
 
 ---
 
