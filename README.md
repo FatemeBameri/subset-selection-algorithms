@@ -32,6 +32,19 @@ Implementation of a **Maximum Reduction as Maximum Contribution sampler**. This 
 
 ---
 
+# supporting-scripts
+
+These scripts provide supporting functionality used throughout the project.
+
+---
+
+## Files
+
+### 1. `extract_train_features.py`
+This implementation extracts intermediate feature maps from layers 2 and 3 of a pre-trained ResNet backbone, upsamples and concatenates them to form a 1024-dimensional feature representation for each training image in every class of the MVTec dataset.
+
+---
+
 ## Applications
 - Selecting diverse samples for machine learning  
 - Data summarization or representative selection  
