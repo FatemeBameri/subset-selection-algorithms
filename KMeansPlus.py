@@ -32,3 +32,7 @@ class KMeansPlusSampler(BaseSampler):
             subset = torch.tensor(subset, device=self.features_device)
 
         return subset
+
+'''
+patchcore.sampler.KMeansSampler(percentage)
+'''
