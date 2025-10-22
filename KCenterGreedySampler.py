@@ -4,6 +4,29 @@ import torch
 from sklearn.metrics import pairwise_distances
 
 
+class BaseSampler(abc.ABC):
+    def __init__(self, percentage: float):
+        if not 0 < percentage < 1:
+            raise ValueError("Percentage value not in (0, 1).")
+        self.percentage = percentage
+
+    @abc.abstractmethod
+    def run(
+        self, features: Union[torch.Tensor, np.ndarray]
+    ) -> Union[torch.Tensor, np.ndarray]:
+        pass
+
+    def _store_type(self, features: Union[torch.Tensor, np.ndarray]) -> None:
+        self.features_is_numpy = isinstance(features, np.ndarray)
+        if not self.features_is_numpy:
+            self.features_device = features.device
+
+    def _restore_type(self, features: torch.Tensor) -> Union[torch.Tensor, np.ndarray]:
+        if self.features_is_numpy:
+            return features.cpu().numpy()
+        return features.to(self.features_device)
+        
+
 class KCenterGreedySampler(BaseSampler):
     def __init__(self, percentage: float, device: torch.device):
         super().__init__(percentage)
