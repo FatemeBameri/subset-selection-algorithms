@@ -36,8 +36,6 @@ Implementation of a **Maximum Reduction as Maximum Contribution sampler**. This 
 
 These scripts provide supporting functionality used throughout the project.
 
----
-
 ## Files
 
 ### 1. `extract_train_features.py`
