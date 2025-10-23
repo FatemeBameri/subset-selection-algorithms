@@ -10,11 +10,11 @@ from tqdm import tqdm
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-dataset_root = "mvtec_original"
+dataset_root = "mvtec"
 features_save_root = "features"
 os.makedirs(features_save_root, exist_ok=True)
 
-
+# مدل pretrained
 backbone = wide_resnet50_2(weights='IMAGENET1K_V1').to(device)
 backbone.eval()
 
@@ -39,19 +39,19 @@ def extract_feature(img_tensor):
         layer3 = backbone.layer2(layer2)  # 512 کانال
 
         # Projection
-        layer2_proj = proj_layer2(layer2)
-        layer3_proj = proj_layer3(layer3)
+        #layer2_proj = proj_layer2(layer2)
+        #layer3_proj = proj_layer3(layer3)
 
         # Upsample layer2 به اندازه spatial layer3
-        layer2_up = F.interpolate(layer2_proj, size=layer3_proj.shape[2:], mode='bilinear', align_corners=False)
-
+        #layer2_up = F.interpolate(layer2_proj, size=layer3_proj.shape[2:], mode='bilinear', align_corners=False)
+        layer3_up = F.interpolate(layer3, size=layer2.shape[2:], mode='bilinear', align_corners=False)
         # Concat
-        concat_features = torch.cat([layer2_up, layer3_proj], dim=1)  # 512+512=1024 کانال
+        concat_features = torch.cat([layer2, layer3_up], dim=1)  # 512+512=1024 کانال
         feature_vector = concat_features.mean(dim=[2,3])  # global avg pooling
 
     return feature_vector.squeeze(0).cpu().numpy()  # [1024,]
 
-
+# پردازش کلاس‌ها
 for class_name in os.listdir(dataset_root):
     class_train_dir = os.path.join(dataset_root, class_name, "train")
     if not os.path.isdir(class_train_dir):
