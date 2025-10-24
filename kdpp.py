@@ -161,3 +161,75 @@ class ApproximateDPPSampler(BaseSampler):
             sel_feats = torch.tensor(sel_feats, device=self.features_device, dtype=torch.float32)
         return sel_feats
 
+
+# Approximation version of KDPP
+
+class ApproximateDPPSampler(BaseSampler):
+    def __init__(self, percentage: float, device: str = "cpu", subset_size: int = 10000, mcmc_iters: int = 500):
+        super().__init__(percentage)
+        self.device = torch.device(device)
+        self.subset_size = subset_size
+        self.mcmc_iters = mcmc_iters
+
+    def run(self, features):
+        self._store_type(features)
+        if isinstance(features, torch.Tensor):
+            X = features.cpu().numpy()
+        else:
+            X = features
+
+        N = len(X)
+        k = max(1, int(N * self.percentage))
+
+       
+        subset_idx = np.random.choice(N, min(self.subset_size, N), replace=False)
+        X_sub = X[subset_idx]
+        X_sub = X_sub / (np.linalg.norm(X_sub, axis=1, keepdims=True) + 1e-10)
+        L_sub = X_sub @ X_sub.T
+
+       
+        eigvals, eigvecs = np.linalg.eigh(L_sub)
+        eigvals[eigvals < 0] = 0 
+        L_sub = eigvecs @ np.diag(eigvals) @ eigvecs.T
+        L_sub += np.eye(L_sub.shape[0]) * 1e-6  # regularization
+
+       
+        rank_L = np.sum(eigvals > 1e-8)
+        k_sub = min(k, rank_L)
+
+      
+        dpp = FiniteDPP('likelihood', **{'L': L_sub})
+        selected_sub_idx = None
+
+        try:
+           
+            dpp.sample_exact_k_dpp(size=k_sub)
+            selected_sub_idx = np.array(dpp.list_of_samples[-1])
+        except Exception as e1:
+            print(f"sample_exact_k_dpp failed: {e1}")
+            try:
+                dpp.sample_mcmc_k_dpp(size=k_sub, n_iter=self.mcmc_iters)
+                selected_sub_idx = np.array(dpp.list_of_samples[-1])
+            except Exception as e2:
+                print(f"sample_mcmc_k_dpp failed: {e2}")
+                try:
+                    dpp.sample_exact()
+                    selected_sub_idx = np.array(dpp.list_of_samples[-1])
+                except Exception as e3:
+                    print(f"sample_exact failed: {e3}")
+                    dpp.sample_mcmc(n_iter=self.mcmc_iters)
+                    selected_sub_idx = np.array(dpp.list_of_samples[-1])
+
+
+        if selected_sub_idx is None or len(selected_sub_idx) == 0:
+            print("DPP sampling failed, falling back to random subset.")
+            selected_sub_idx = np.random.choice(L_sub.shape[0], k_sub, replace=False)
+
+
+        selected_idx = subset_idx[selected_sub_idx]
+        subset = X[selected_idx]
+
+        if not self.features_is_numpy:
+            subset = torch.tensor(subset, device=self.features_device)
+
+        return subset
