@@ -56,6 +56,9 @@ The summary notes file of the ELFS paper.
 ### 2. `mynotes_patchcore_minimumredundancy.pdf`
 The summary notes file for the Minimum Redundancy and PatchCore papers.
 
+### 3. `mynotes_CCS.pdf`
+he summary notes file of the CCS paper.
+
 ## Applications
 - Selecting diverse samples for machine learning  
 - Data summarization or representative selection  
