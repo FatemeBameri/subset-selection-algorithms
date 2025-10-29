@@ -50,8 +50,11 @@ The extracted features can be downloaded from [Train_MVTec](https://drive.google
 
 # Related Notes
 
-### 1. `Mynotes_ELFS.py`
-The summary notes file of the ELFS paper
+### 1. `Mynotes_ELFS.pdf`
+The summary notes file of the ELFS paper.
+
+### 2. `mynotes_patchcore_minimumredundancy.pdf`
+The summary notes file for the Minimum Redundancy and PatchCore papers.
 
 ## Applications
 - Selecting diverse samples for machine learning  
