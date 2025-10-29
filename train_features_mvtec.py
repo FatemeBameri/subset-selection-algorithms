@@ -8,14 +8,8 @@ from PIL import Image
 import numpy as np
 from tqdm import tqdm
 import copy
-
-import torch
 from torchvision.models import wide_resnet50_2
-import common  # مطمئن شو این ماژول در مسیرت وجود دارد
-
-
-#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
+import common  
 
 
 class _BaseMerger:
@@ -100,7 +94,7 @@ class PatchCore(torch.nn.Module):
 
 
         #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        '''
+     
         features = [
             self.patch_maker.patchify(x, return_spatial_info=True) for x in features
         ]
@@ -133,8 +127,6 @@ class PatchCore(torch.nn.Module):
             _features = _features.reshape(len(_features), -1, *_features.shape[-3:])
             features[i] = _features
         features = [x.reshape(-1, *x.shape[-3:]) for x in features]
-
-'''
 
         # As different feature backbones & patching provide differently
         # sized features, these are brought into the correct form here.
@@ -314,10 +306,10 @@ class PatchMaker:
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-'''
 
-dataset_root = "G:/Bameri_Thesis/patchcore/patchcore-inspection-main/mvtec_original"
-features_save_root = "G:/Bameri_Thesis/patchcore/patchcore-inspection-main/features_train"
+
+dataset_root = "./mvtec_original"
+features_save_root = "./features_train"
 os.makedirs(features_save_root, exist_ok=True)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
