@@ -48,6 +48,10 @@ The extracted features can be downloaded from [Train_MVTec](https://drive.google
 
 ---
 
+# Related Notes
+
+### 1. `Mynotes_ELFS.py`
+
 ## Applications
 - Selecting diverse samples for machine learning  
 - Data summarization or representative selection  
