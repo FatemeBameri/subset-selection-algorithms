@@ -44,6 +44,9 @@ These scripts provide supporting functionality used throughout the project.
 ### 1. `train_features_mvtec.py`
 Feature extraction code for the train set in the MVTec dataset — extracting features from layers 2 and 3 of the ResNet, upsampling layer 3, and then concatenating them.
 
+### 2. `test_features_mvtec.py`
+Feature extraction code for the test set in the MVTec dataset — extracting features from layers 2 and 3 of the ResNet, upsampling layer 3, and then concatenating them. For anomaly images, two separate feature sets should be extracted and saved for each image, containing the normal and anomalous vectors separately.
+
 ---
 
 # Related Notes
