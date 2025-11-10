@@ -1,270 +1,181 @@
-import numpy as np
 import torch
-from sklearn.cluster import MiniBatchKMeans
+import torch.nn as nn
+from tqdm import tqdm
+import abc
+from typing import Union
 
 
-#----------------------------MRMC----------------------------
-class MRMC_CoresetSampler(BaseSampler):
-    def __init__(self, percentage: float, rho: float = 1/3, r_param: float = 2.0, alpha_random: float = 0.15):
-        super().__init__(percentage)
-        self.rho = rho
-        self.r_param = r_param
-        self.alpha_random = alpha_random
-
-    def run(self, phi: Union[torch.Tensor, np.ndarray], L_reg: Union[torch.Tensor, np.ndarray], labels: Union[torch.Tensor, np.ndarray]) -> np.ndarray:
-        """
-        phi: importance scores (phi)
-        L_reg: regularization scores (L_reg)
-        labels: class labels (numpy or tensor)
-        returns: indices of selected core-set
-        """
-        # تبدیل همه به numpy برای ساده‌تر شدن پردازش
-        if isinstance(phi, torch.Tensor):
-            phi = phi.cpu().numpy()
-        if isinstance(L_reg, torch.Tensor):
-            L_reg = L_reg.cpu().numpy()
-        if isinstance(labels, torch.Tensor):
-            labels = labels.cpu().numpy()
-
-        N = len(phi)
-        core_size = int(self.percentage * N)
-        num_random = int(self.alpha_random * core_size)
-        num_top = core_size - num_random
-        U_all = phi - self.r_param * L_reg
-
-        core_indices = []
-
-        # مرحله 1: top phi + random
-        for c in np.unique(labels):
-            idx_c = np.where(labels == c)[0]
-            k_top = num_top // len(np.unique(labels))
-            topk = idx_c[np.argsort(-phi[idx_c])[:k_top]]
-            k_rand = max(num_random // len(np.unique(labels)), 1)
-            remaining = np.setdiff1d(idx_c, topk, assume_unique=True)
-            randk = remaining if len(remaining) < k_rand else np.random.choice(remaining, k_rand, replace=False)
-            core_indices.extend(np.concatenate([topk, randk]))
-
-        core_indices = np.unique(np.array(core_indices))
-        if len(core_indices) < core_size:
-            needed = core_size - len(core_indices)
-            remaining_all = np.setdiff1d(np.arange(N), core_indices, assume_unique=True)
-            add_idx = remaining_all[np.argsort(-phi[remaining_all])[:needed]]
-            core_indices = np.concatenate([core_indices, add_idx])
-        elif len(core_indices) > core_size:
-            core_indices = core_indices[:core_size]
-
-        # مرحله 2: C' و top-U_all
-        C_prime_size = int(np.floor(self.rho * len(core_indices)))
-        C_prime_indices = []
-        for c in np.unique(labels):
-            idx_c = np.intersect1d(np.where(labels==c)[0], core_indices, assume_unique=True)
-            if len(idx_c) == 0: continue
-            topk = idx_c[np.argsort(-phi[idx_c])[:max(1, C_prime_size // len(np.unique(labels)))]]
-            C_prime_indices.extend(topk)
-
-        C_prime_indices = np.unique(np.array(C_prime_indices))
-        remaining = np.setdiff1d(np.arange(N), C_prime_indices, assume_unique=True)
-        add_count = len(core_indices) - len(C_prime_indices)
-        add_indices = []
-        for c in np.unique(labels):
-            rem_cls = np.intersect1d(remaining, np.where(labels==c)[0], assume_unique=True)
-            if len(rem_cls) == 0: continue
-            top_add = rem_cls[np.argsort(-U_all[rem_cls])[:max(1, add_count // len(np.unique(labels)))]]
-            add_indices.extend(top_add)
-        add_indices = np.unique(np.array(add_indices))
-        if len(add_indices) < add_count:
-            need = add_count - len(add_indices)
-            rem2 = np.setdiff1d(remaining, add_indices, assume_unique=True)
-            add2 = rem2[np.argsort(-U_all[rem2])[:need]]
-            add_indices = np.concatenate([add_indices, add2])
-
-        core_final_indices = np.unique(np.concatenate([C_prime_indices, add_indices]))
-        if len(core_final_indices) < core_size:
-            need = core_size - len(core_final_indices)
-            rem = np.setdiff1d(np.arange(N), core_final_indices, assume_unique=True)
-            add_more = rem[np.argsort(-U_all[rem])[:need]]
-            core_final_indices = np.concatenate([core_final_indices, add_more])
-        elif len(core_final_indices) > core_size:
-            core_final_indices = core_final_indices[:core_size]
-
-        return core_final_indices
-
-class MRMC_CoresetSampler(BaseSampler):
-    """
-    Fast Approximate MRMC Coreset Sampler
-    - PatchCore-compatible (run(features))
-    - Uses approximate diversity for speed
-    - Handles torch.Tensor or np.ndarray
-    """
-
-    def __init__(self, percentage: float, rho: float = 1/3, r_param: float = 2.0,
-                 alpha_random: float = 0.15, device: str = "cuda", 
-                 diversity_fraction: float = 0.1, batch_size: int = 256):
-        """
-        Args:
-            percentage: fraction of features to select (0-1)
-            rho: fraction of core that forms C'
-            r_param: regularization weight
-            alpha_random: fraction of core that is random
-            device: "cuda" or "cpu"
-            diversity_fraction: fraction of features used to approximate diversity
-            batch_size: batch size for computing distances
-        """
-        super().__init__(percentage)
-        self.rho = rho
-        self.r_param = r_param
-        self.alpha_random = alpha_random
-        self.device = torch.device(device if torch.cuda.is_available() else "cpu")
-        self.diversity_fraction = diversity_fraction
-        self.batch_size = batch_size
-
-    @torch.no_grad()
-    def run(self, features):
-        is_numpy = isinstance(features, np.ndarray)
-        if is_numpy:
-            features = torch.from_numpy(features).float()
-        else:
-            features = features.detach().float()
-
-        features = features.to(self.device)
-        N, D = features.shape
-        if N == 0:
-            return features
-
-        # ---- Compute φ and L_reg ----
-        phi = features.norm(dim=1)
-        L_reg = torch.var(features, dim=1)
-
-        # ---- Approximate diversity ----
-        subset_size = max(1, int(N * self.diversity_fraction))
-        subset_idx = torch.randperm(N)[:subset_size]
-        subset_feats = features[subset_idx]
-
-        diversity_score = []
-        for i in range(0, N, self.batch_size):
-            batch = features[i:i+self.batch_size]
-            dist = torch.cdist(batch, subset_feats)
-            diversity_score.append(dist.mean(dim=1))
-        diversity_score = torch.cat(diversity_score)
-
-        # ---- Combined score ----
-        U_all = phi - self.r_param * L_reg + diversity_score  # diversity implicit weight = 1
-
-        # ---- Select top samples ----
-        core_size = int(self.percentage * N)
-        num_random = int(self.alpha_random * core_size)
-        num_top = core_size - num_random
-
-        top_indices = torch.argsort(U_all, descending=True)[:num_top].cpu().numpy()
-        remaining = np.setdiff1d(np.arange(N), top_indices, assume_unique=True)
-        rand_indices = np.random.choice(remaining, size=num_random, replace=False)
-        core_indices = np.unique(np.concatenate([top_indices, rand_indices]))
-
-        # ---- Return in original type ----
-        if is_numpy:
-            return features.cpu().numpy()[core_indices]
-        else:
-            return features[core_indices].to(features.device)
-
-class MRMC_CoresetSampler2(BaseSampler):
-    """
-    Fast Cluster-based MRMC Sampler
-    PatchCore-compatible (run(features))
-    Combines representativeness + informativeness using clustering
-    """
-
+class MRMCCoresetSampler(BaseSampler):
     def __init__(
-        self, 
-        percentage: float, 
-        rho: float = 1/3, 
-        r_param: float = 2.0, 
-        alpha_random: float = 0.15,
-        n_clusters: int = 50,
-        device: str = "cuda"
+        self,
+        percentage: float,
+        model: nn.Module,
+        dataloader,
+        device: torch.device,
+        R: int = 10,
+        rho: float = 0.3,
+        gamma: float = 2,
+        lr: float = 0.1,
+        proxy_epochs: int = 200
     ):
         super().__init__(percentage)
+        self.model = model
+        self.dataloader = dataloader
+        self.device = device
+        self.R = R
         self.rho = rho
-        self.r_param = r_param
-        self.alpha_random = alpha_random
-        self.n_clusters = n_clusters
-        self.device = torch.device(device if torch.cuda.is_available() else "cpu")
+        self.gamma = gamma
+        self.lr = lr
+        self.proxy_epochs = proxy_epochs
 
-    def run(self, features):
-        is_numpy = isinstance(features, np.ndarray)
-        if is_numpy:
-            feats = torch.from_numpy(features).float()
-        else:
-            feats = features.detach().cpu().float()
+    def run(self, features=None):
+        #self._store_type(features)
+        self.model.to(self.device)
+        self.model.train()
 
-        N, D = feats.shape
-        if N == 0:
-            return features
+        num_samples = len(self.dataloader.dataset)
+        coreset_size = int(self.percentage * num_samples)
+        all_losses = torch.zeros((self.R, num_samples), device=self.device)
 
-        # ---- Compute basic metrics ----
-        phi = feats.norm(dim=1).numpy()        # informativeness
-        L_reg = torch.var(feats, dim=1).numpy()  # regularization term
-        U_all = phi - self.r_param * L_reg
+        criterion = nn.CrossEntropyLoss(reduction='none')
+        optimizer = torch.optim.SGD(self.model.parameters(), lr=0.1, momentum=0.9,weight_decay=5e-4)
 
-        # ---- Fast clustering to ensure diversity ----
-        kmeans = MiniBatchKMeans(
-            n_clusters=min(self.n_clusters, N // 5 + 1),
-            batch_size=512,
-            n_init="auto"
-        ).fit(feats.numpy())
+        # ------------------------ Phase 1: R rounds mini-batch SGD ------------------------
+        for r in range(self.R):
+            print(f"[Round {r+1}/{self.R}] Training model and collecting losses...")
+            batch_losses = torch.zeros(num_samples, device=self.device)
+            for batch_idx, (indices, (inputs, targets)) in enumerate(tqdm(self.dataloader)):
+                inputs, targets = inputs.to(self.device), targets.to(self.device)
+                optimizer.zero_grad()
+                outputs = self.model(inputs)
+                loss = criterion(outputs, targets)
+                loss_mean = loss.mean()
+                loss_mean.backward()
+                optimizer.step()
+                batch_losses[indices] = loss.detach()
+            all_losses[r] = batch_losses
 
-        centers = torch.tensor(kmeans.cluster_centers_, dtype=torch.float32)
-        labels = kmeans.labels_
+        # ------------------------ Phase 2: compute φ_MRMC ------------------------
+        print("Computing φ_MRMC (vectorized exponential fitting)...")
 
-        # Representative sample per cluster (max U_all in cluster)
-        selected = []
-        for c in range(len(centers)):
-            idx_c = np.where(labels == c)[0]
-            if len(idx_c) == 0:
-                continue
-            best_idx = idx_c[np.argmax(U_all[idx_c])]
-            selected.append(best_idx)
+        R = self.R
+        r_values = torch.arange(1, R + 1, device=self.device, dtype=torch.float32)  # (R,)
+        num_samples = all_losses.shape[1]
 
-        # ---- Add more samples to reach target ----
-        selected = np.array(selected)
-        core_size = int(self.percentage * N)
-        remaining = np.setdiff1d(np.arange(N), selected, assume_unique=True)
-        extra_needed = max(0, core_size - len(selected))
+        all_losses = torch.clamp(all_losses, min=1e-8)
 
-        # Mix of top-U and random
-        top_indices = np.argsort(-U_all[remaining])[:int(extra_needed * (1 - self.alpha_random))]
-        rand_indices = np.random.choice(remaining, size=int(extra_needed * self.alpha_random), replace=False)
+        y = torch.log(all_losses)  # (R, N)
+        mean_r = torch.mean(r_values)
+        mean_y = torch.mean(y, dim=0)  # (N,)
 
-        core_indices = np.unique(np.concatenate([selected, remaining[top_indices], rand_indices]))
-        if len(core_indices) > core_size:
-            core_indices = core_indices[:core_size]
+        cov_ry = torch.sum((r_values.unsqueeze(1) - mean_r) * (y - mean_y.unsqueeze(0)), dim=0)
+        var_r = torch.sum((r_values - mean_r) ** 2)
 
-        # ---- Return result ----
-        if is_numpy:
-            return features[core_indices]
-        else:
-            return features[core_indices.to(features.device) if torch.is_tensor(core_indices)
-                            else torch.tensor(core_indices, device=features.device)]
+        w = -cov_ry / (var_r + 1e-12)  # (N,)
+        log_q = mean_y + w * mean_r  # (N,)
+        q = torch.exp(log_q)  # (N,)
+
+        phi_mrmc = q * (1 - torch.exp(-w * R))
+
+        print(f"φ_MRMC computed: shape={phi_mrmc.shape}, min={phi_mrmc.min():.4f}, max={phi_mrmc.max():.4f}")
+
+        # ------------------------ Phase 3: coreset selection ------------------------
+        if self.rho == 1:
+            _, topk_idx = torch.topk(phi_mrmc, coreset_size)
+            return self._restore_type(topk_idx)
+
+        # ------------------------ Phase 4: top ρ|C| for proxy ------------------------
+        num_top = int(self.rho * coreset_size)
+        _, top_indices = torch.topk(phi_mrmc, num_top)
+        top_indices = top_indices.to(self.device)
+
+        # ------------------------ Phase 5: train lightweight proxy model ------------------------
+        feature_dim = self.model(
+            torch.zeros(1, *self.dataloader.dataset[0][1][0].shape).to(self.device)
+        ).flatten(1).shape[1]
+
+        proxy = nn.Linear(feature_dim, 1).to(self.device)
+        proxy_opt = torch.optim.Adam(proxy.parameters(), lr=self.lr)
+
+        print(f"Training proxy model on top {num_top} samples...")
+        for epoch in range(self.proxy_epochs):
+            proxy_loss_sum = 0.0
+            for batch_idx, (indices, (inputs, _)) in enumerate(self.dataloader):
+                inputs = inputs.to(self.device)
+                indices = indices.to(self.device)
+                mask = (indices.unsqueeze(1) == top_indices).any(dim=1)
+                if mask.sum() == 0:
+                    continue
+                inputs_subset = inputs[mask]
+                idx_subset = indices[mask]
+
+                with torch.no_grad():
+                    feats = self.model(inputs_subset).flatten(1)
+
+                preds = proxy(feats).squeeze()
+                true_vals = phi_mrmc[idx_subset]
+                loss = torch.mean((preds - true_vals) ** 2)
+
+                proxy_opt.zero_grad()
+                loss.backward()
+                proxy_opt.step()
+                proxy_loss_sum += loss.item()
+            print(f"Proxy Epoch {epoch + 1}: Loss={proxy_loss_sum:.4f}")
+
+        # ------------------------ Phase 6: compute φ_reg for remaining samples ------------------------
+        all_indices = torch.arange(len(phi_mrmc), device=self.device)
+        remaining_mask = ~torch.isin(all_indices, top_indices)
+        remaining_indices = all_indices[remaining_mask]
+
+        phi_reg = torch.zeros_like(phi_mrmc)
+        with torch.no_grad():
+            for batch_idx, (indices, (inputs, _)) in enumerate(self.dataloader):
+                inputs = inputs.to(self.device)
+                indices = indices.to(self.device)
+                mask = torch.isin(indices, remaining_indices)
+                if mask.sum() == 0:
+                    continue
+                inputs_subset = inputs[mask]
+                idx_subset = indices[mask]
+
+                feats = self.model(inputs_subset).flatten(1)
+                preds = proxy(feats).squeeze()
+                loss_vals = torch.abs(preds - phi_mrmc[idx_subset])
+                phi_reg[idx_subset] = torch.exp(-loss_vals)
+
+        # ------------------------ Phase 7: final selection ------------------------
+        num_remaining = coreset_size - num_top
+        final_scores = phi_mrmc[remaining_indices] * (phi_reg[remaining_indices] ** self.gamma)
+        _, remaining_top_idx = torch.topk(final_scores, num_remaining)
+        final_indices = torch.cat([top_indices, remaining_indices[remaining_top_idx]])
+
+        if features is not None:
+            features_np = features.detach().cpu().numpy() if torch.is_tensor(features) else np.asarray(features)
+            selected_features = features_np[final_indices.cpu().numpy()]
+            print(f"[DEBUG] Returning selected features with shape {selected_features.shape}")
+            return selected_features
+            
+        return final_indices
+
 
 '''
-    elif name == "mrmc_coreset":
-        return patchcore.sampler.MRMCoresetSampler(percentage=0.1, device=torch.device("cpu"))
-
-    elif name == "mrmc_coreset":
-        return patchcore.sampler.MRMC_CoresetSampler(
-                 percentage=0.3,
-                 rho=1/3,
-                 r_param=2.0,
-                 alpha_random=0.1,
-                 n_clusters=50
-               )
-               
-    elif name == "mrmc_coreset":
-       return patchcore.sampler.MRMC_CoresetSampler(
-             percentage=0.3,
-             rho=1/3,
-             r_param=2.0,
-            alpha_random=0.15
-     )
+       elif name == "MRMC2":
+       
+            import torch.nn as nn
+            import torchvision.models as models
+            model = models.wide_resnet50_2(weights='IMAGENET1K_V1')
+            num_ftrs = model.fc.in_features
+            model.fc = nn.Linear(num_ftrs, 15) 
+            model = model.to(device)
+            
+            return patchcore.sampler.MRMCCoresetSampler(
+            percentage=0.1,
+            model=model,
+            dataloader=train_loader2,
+            device=torch.device("cuda:0"),
+            R=10,
+            rho=1 / 3,
+            gamma=2
+        )
+        
 '''
-
-
