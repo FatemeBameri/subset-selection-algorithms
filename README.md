@@ -23,6 +23,10 @@ It is well-suited for large-scale datasets where efficiency is critical.
 Implementation of an **Approximate CLARANS Sampler** that leverages **GPU acceleration** for faster computations.  
 It is well-suited for large-scale datasets where efficiency and memory usage are critical.
 
+### 4. `KMeansPlusCoreset.py*********`
+Implementation of an **Approximate CLARANS Sampler** that leverages **GPU acceleration** for faster computations.  
+It is well-suited for large-scale datasets where efficiency and memory usage are critical.
+
 ### 3. `CCC.py`
 Implementation of a **Coverage-Centric Coreset Sampler** that supports **random**, **monotonic**, and **stratified sampling** strategies.  
 This implementation is **adapted from the original code** available on GitHub: [Coverage-Centric Coreset](https://github.com/haizhongzheng/Coverage-centric-coreset-selection/tree/main) and has been integrated into this project.
