@@ -19,7 +19,7 @@ It is well-suited for large-scale datasets where efficiency is critical.
 Implementation of a **Greedy k-DPP Sampler** that leverages **GPU acceleration** for faster computations.  
 It is well-suited for large-scale datasets where efficiency is critical.
 
-### 2. `CLARANS.py`
+### 4. `CLARACoreset.py`
 Implementation of an **Approximate CLARANS Sampler** that leverages **GPU acceleration** for faster computations.  
 It is well-suited for large-scale datasets where efficiency and memory usage are critical.
 
