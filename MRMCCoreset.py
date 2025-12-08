@@ -4,7 +4,6 @@ from tqdm import tqdm
 import abc
 from typing import Union
 
-
 class MRMCCoresetSampler(BaseSampler):
     def __init__(
         self,
@@ -62,32 +61,38 @@ class MRMCCoresetSampler(BaseSampler):
         r_values = torch.arange(1, R + 1, device=self.device, dtype=torch.float32)  # (R,)
         num_samples = all_losses.shape[1]
 
+        # جلوگیری از log(0)
         all_losses = torch.clamp(all_losses, min=1e-8)
 
+        # log(losses) برای برازش log(l(r)) = log(q) - w*r
         y = torch.log(all_losses)  # (R, N)
         mean_r = torch.mean(r_values)
         mean_y = torch.mean(y, dim=0)  # (N,)
 
+        # محاسبه‌ی کوواریانس r و log(loss)
         cov_ry = torch.sum((r_values.unsqueeze(1) - mean_r) * (y - mean_y.unsqueeze(0)), dim=0)
         var_r = torch.sum((r_values - mean_r) ** 2)
 
+        # محاسبه‌ی w_j و q_j
         w = -cov_ry / (var_r + 1e-12)  # (N,)
         log_q = mean_y + w * mean_r  # (N,)
         q = torch.exp(log_q)  # (N,)
 
+        # φ_MRMC بر اساس فرمول مقاله φ = q * (1 - exp(-w * R))
         phi_mrmc = q * (1 - torch.exp(-w * R))
 
         print(f"φ_MRMC computed: shape={phi_mrmc.shape}, min={phi_mrmc.min():.4f}, max={phi_mrmc.max():.4f}")
 
         # ------------------------ Phase 3: coreset selection ------------------------
         if self.rho == 1:
+            # اگر rho=1، تمام coreset بر اساس φ_MRMC
             _, topk_idx = torch.topk(phi_mrmc, coreset_size)
             return self._restore_type(topk_idx)
 
         # ------------------------ Phase 4: top ρ|C| for proxy ------------------------
         num_top = int(self.rho * coreset_size)
         _, top_indices = torch.topk(phi_mrmc, num_top)
-        top_indices = top_indices.to(self.device)
+        top_indices = top_indices.to(self.device)  # برای GPU
 
         # ------------------------ Phase 5: train lightweight proxy model ------------------------
         feature_dim = self.model(
@@ -140,42 +145,23 @@ class MRMCCoresetSampler(BaseSampler):
 
                 feats = self.model(inputs_subset).flatten(1)
                 preds = proxy(feats).squeeze()
+                # φ_reg بر اساس اختلاف با φ_MRMC واقعی
                 loss_vals = torch.abs(preds - phi_mrmc[idx_subset])
                 phi_reg[idx_subset] = torch.exp(-loss_vals)
 
         # ------------------------ Phase 7: final selection ------------------------
         num_remaining = coreset_size - num_top
+        # ترکیب MRMC و reg مطابق Eq.21
         final_scores = phi_mrmc[remaining_indices] * (phi_reg[remaining_indices] ** self.gamma)
         _, remaining_top_idx = torch.topk(final_scores, num_remaining)
         final_indices = torch.cat([top_indices, remaining_indices[remaining_top_idx]])
 
+        # ✅ نهایی: حالا فیچرهای واقعی برگردانده می‌شود، نه فقط ایندکس‌ها
         if features is not None:
             features_np = features.detach().cpu().numpy() if torch.is_tensor(features) else np.asarray(features)
             selected_features = features_np[final_indices.cpu().numpy()]
             print(f"[DEBUG] Returning selected features with shape {selected_features.shape}")
             return selected_features
-            
+
+        # اگر فیچر ورودی None باشد، فقط ایندکس‌ها را بده (برای سازگاری)
         return final_indices
-
-
-'''
-       elif name == "MRMC2":
-       
-            import torch.nn as nn
-            import torchvision.models as models
-            model = models.wide_resnet50_2(weights='IMAGENET1K_V1')
-            num_ftrs = model.fc.in_features
-            model.fc = nn.Linear(num_ftrs, 15) 
-            model = model.to(device)
-            
-            return patchcore.sampler.MRMCCoresetSampler(
-            percentage=0.1,
-            model=model,
-            dataloader=train_loader2,
-            device=torch.device("cuda:0"),
-            R=10,
-            rho=1 / 3,
-            gamma=2
-        )
-        
-'''
