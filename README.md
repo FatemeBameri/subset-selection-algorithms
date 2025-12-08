@@ -23,10 +23,12 @@ It is well-suited for large-scale datasets where efficiency is critical.
 Implementation of an **Approximate CLARANS Sampler** that leverages **GPU acceleration** for faster computations.  
 It is well-suited for large-scale datasets where efficiency and memory usage are critical.
 
-### 4. `KMeansPlusCoreset.py*********`
+### 5. `KMeansPlusCoreset.py*********`
 Implementation of an **Approximate CLARANS Sampler** that leverages **GPU acceleration** for faster computations.  
 It is well-suited for large-scale datasets where efficiency and memory usage are critical.
 
+### 6. `MRMC.py`
+Implementation of a **Maximum Reduction as Maximum Contribution sampler**. This is an unofficial implementation inspired by the paper: **Efficient Core-set Selection for Deep Learning Through Squared Loss Minimization.**
 ### 3. `CCC.py`
 Implementation of a **Coverage-Centric Coreset Sampler** that supports **random**, **monotonic**, and **stratified sampling** strategies.  
 This implementation is **adapted from the original code** available on GitHub: [Coverage-Centric Coreset](https://github.com/haizhongzheng/Coverage-centric-coreset-selection/tree/main) and has been integrated into this project.
@@ -38,9 +40,6 @@ It preserves the property that **medoids are actual data points** and safely man
 ### 5. `MRC.py`
 Implementation of a **Minimum Redundancy Constraint sampler** that leverages **GPU acceleration** to enable efficient and scalable subset selection in large feature spaces.
 This is an unofficial implementation inspired by the paper: **Unsupervised surface defect detection using dictionary-based sparse representation**.
-
-### 6. `MRMC.py`
-Implementation of a **Maximum Reduction as Maximum Contribution sampler**. This is an unofficial implementation inspired by the paper: **Efficient Core-set Selection for Deep Learning Through Squared Loss Minimization.**
 
 ### 7. `KCenterGreedySampler.py`
 Implementation of a **K-Center Greedy Sampler** for coreset selection. This implementation inspired by the core idea of diversity-based sampling, where samples are iteratively selected to maximize the minimum distance to already chosen points, ensuring wide coverage of the feature space.
