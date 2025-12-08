@@ -11,6 +11,10 @@ These methods are useful for selecting diverse and representative subsets of dat
 Implementation of a **Greedy k-DPP Sampler** that leverages **GPU acceleration** for faster computations.  
 It is well-suited for large-scale datasets where efficiency is critical.
 
+### 1. `FacilityLocation.py*********`
+Implementation of a **Greedy k-DPP Sampler** that leverages **GPU acceleration** for faster computations.  
+It is well-suited for large-scale datasets where efficiency is critical.
+
 ### 1. `KDpp.py`
 Implementation of a **Greedy k-DPP Sampler** that leverages **GPU acceleration** for faster computations.  
 It is well-suited for large-scale datasets where efficiency is critical.
