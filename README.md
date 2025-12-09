@@ -63,7 +63,7 @@ The summary notes file for the Minimum Redundancy and PatchCore papers.
 ### 3. `mynotes_CCS.pdf`
 The summary notes file of the CCS paper.
 
-### 3. `subset_methods_results.pdf`
+### 4. `subset_methods_results.pdf`
 The summary notes file of the CCS paper.
 
 ## Applications
