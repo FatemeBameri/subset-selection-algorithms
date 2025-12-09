@@ -24,7 +24,7 @@ The KMeansPlusSampler is a clustering-based sampling method designed to select a
 ### 6. `MRMC.py`
 Implementation of a Maximum Reduction as Maximum Contribution sampler. This is an unofficial implementation inspired by the paper: Efficient Core-set Selection for Deep Learning Through Squared Loss Minimization.
 
-### 7. `ELFSCoreset.py`
+### 7. `Improved_ELFSCoreset.py`
 Our Approximate ELFSCoresetSampler evaluates each feature according to three complementary criteria: representativeness, measured as the distance from the mean of all features; density, estimated approximately via distances to a subset of reference points to capture local concentration; and instability, which quantifies the sensitivity of features to small random perturbations. Each score is normalized and combined into a composite metric, from which the top candidate features are selected. To ensure diversity, a k-center greedy selection is applied on this candidate pool, resulting in a subsample that balances coverage, local density, and robustness to noise, while remaining efficient in both memory usage and computation.
 
 ### 8. `MRC.py`
