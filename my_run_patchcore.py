@@ -378,20 +378,12 @@ def sampler(name, percentage):
             return patchcore.sampler.GreedyKDppSamplerGPU(percentage=percentage,   # نوع کرنل: rbf یا cosine
                         sigma=3.0,           # عرض کرنل RBF
                         device=device)
+            
         elif name == "pam_coreset":
             return patchcore.sampler.FasterPAMSampler(percentage=0.1)
         
         elif name == "app_pam_coreset":
             return patchcore.sampler.ApproxPAMSampler(n_medoids=5000, max_iter=20, sample_size=5000, device=device)
-        elif name == "app_square_coreset":
-
-        elif name == "clarns_coreset":
-            return patchcore.sampler.AutoDeviceApproxCLARANSSampler(
-    percentage=0.1,
-    numlocal=5,
-    maxneighbor=50,
-    random_state=42
-)
 
         elif name == "kcenter_coreset":
             return patchcore.sampler.ApproximateKCenterGreedySampler(percentage, device)
@@ -408,7 +400,7 @@ def sampler(name, percentage):
         elif name == "dpp":
             return patchcore.sampler.DPPSampler(percentage, device)
           
-        elif name == "dpp_pca":
+        elif name == "dpp_app":
             return patchcore.sampler.ApproximateDPPSampler(percentage=0.1, device="cuda", subset_size=10000)
           
         elif name == "facility":
