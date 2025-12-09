@@ -1,7 +1,6 @@
 # subset-selection-algorithms
 
-This repository provides implementations of **subset selection algorithms** based on **Determinantal Point Processes sampler, CLARANS sampler, K-Medoids sampler, Minimum Redundancy Constraint sampler, Maximum Reduction as Maximum Contribution sampler, KCenterGreedy sampler, ELFS sampler, Facility Location sampler, Leverage sampler, Kmeans++ sampler**.  
-These methods are useful for selecting diverse and representative subsets of data, especially in machine learning and AI applications.
+This repository provides implementations of **subset selection algorithms** based on **Determinantal Point Processes sampler, CLARANS sampler, K-Medoids sampler, Minimum Redundancy Constraint sampler, Maximum Reduction as Maximum Contribution sampler, KCenterGreedy sampler, ELFS sampler, Facility Location sampler, Leverage sampler, Kmeans++ sampler**. These methods are useful for selecting diverse and representative subsets of data, especially in machine learning and AI applications.
 
 
 ## Important Notes on Files
