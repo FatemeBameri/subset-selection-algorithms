@@ -13,9 +13,8 @@ Leverage Score Sampling is a coreset selection technique that selects a represen
 ### 2. `FacilityLocation.py`
 Facility Location is a submodular coreset selection method that aims to select a diverse and representative subset of samples by maximizing the coverage of the original dataset. The objective is to ensure that each data point in the full dataset is highly similar to at least one selected sample. In our implementation, cosine similarity is used to measure pairwise affinity, and the Apricot library is employed for efficient greedy optimization of the submodular objective. To improve scalability for large datasets, an approximate variant is also used, where the selection is performed on a randomly sampled subset of the data and then mapped back to the original dataset. More details are provided in the paper "Submodular Function Maximization".
 
-### 3. `kdppCoreset`
-Implementation of a **Greedy k-DPP Sampler** that leverages **GPU acceleration** for faster computations.  
-It is well-suited for large-scale datasets where efficiency is critical.
+### 3. `kdppCoreset.py`
+The Determinantal Point Process (DPP) is a probabilistic sampling framework designed to select a subset of data with maximum diversity. In other words, it ensures that the chosen items are dissimilar to each other, providing a representative and diverse subset of the dataset. In the discrete case, a kernel matrix 𝐿 is constructed to capture the similarities between all vectors, and the probability of selecting a subset 𝑆 is proportional to the determinant of the corresponding submatrix det; subsets containing similar vectors are therefore less likely to be chosen. Advanced variants, such as k-DPP, allow selecting exactly 𝑘 items, which is particularly useful for representative sampling, coreset selection, data summarization, and active learning. In short, DPP is a method for selecting diverse and non-redundant samples from large datasets.
 
 ### 4. `CLARACoreset.py`
 Implementation of an **Approximate CLARANS Sampler** that leverages **GPU acceleration** for faster computations.  
