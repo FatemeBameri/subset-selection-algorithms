@@ -17,33 +17,27 @@ Facility Location is a submodular coreset selection method that aims to select a
 The Determinantal Point Process (DPP) is a probabilistic sampling framework designed to select a subset of data with maximum diversity. In other words, it ensures that the chosen items are dissimilar to each other, providing a representative and diverse subset of the dataset. In the discrete case, a kernel matrix 𝐿 is constructed to capture the similarities between all vectors, and the probability of selecting a subset 𝑆 is proportional to the determinant of the corresponding submatrix det; subsets containing similar vectors are therefore less likely to be chosen. Advanced variants, such as k-DPP, allow selecting exactly 𝑘 items, which is particularly useful for representative sampling, coreset selection, data summarization, and active learning. In short, DPP is a method for selecting diverse and non-redundant samples from large datasets.
 
 ### 4. `CLARACoreset.py`
-Implementation of an **Approximate CLARANS Sampler** that leverages **GPU acceleration** for faster computations.  
-It is well-suited for large-scale datasets where efficiency and memory usage are critical.
+The CLARA algorithm is a scalable sampling-based extension of medoid‑based clustering (such as PAM / k‑medoids), designed to handle large datasets. Instead of clustering the entire data at once — which can be computationally expensive — CLARA draws several small random subsets from the full dataset, runs medoid‑based clustering (e.g. K‑Medoids) separately on each subset to obtain candidate medoids, and then evaluates each candidate set by measuring the total dissimilarity (or cost) between every data point in the full dataset and its nearest medoid. Finally, it selects the medoids (and corresponding clustering) that yield the minimal cost. This way, CLARA approximates the k‑medoids result with much lower computational overhead, making it particularly useful for selecting a representative subset (or “coreset”) of data when dealing with large numbers of data points.
 
 ### 5. `KMeansPlusCoreset.py*********`
-Implementation of an **Approximate CLARANS Sampler** that leverages **GPU acceleration** for faster computations.  
-It is well-suited for large-scale datasets where efficiency and memory usage are critical.
+The KMeansPlusSampler is a clustering-based sampling method designed to select a representative subset of data. It first optionally draws a random subset of the full dataset to reduce computation, then applies MiniBatchKMeans with k-means++ initialization to find cluster centers efficiently. The number of clusters is determined by the desired sampling percentage, ensuring that the subset size reflects the proportion of data to be selected. Finally, for each cluster center, the closest actual data point in the full dataset is chosen, producing a subset of samples that effectively represents the distribution and diversity of the original dataset. This approach is particularly useful for coreset selection, data summarization, and speeding up large-scale machine learning tasks.
 
 ### 6. `MRMC.py`
-Implementation of a **Maximum Reduction as Maximum Contribution sampler**. This is an unofficial implementation inspired by the paper: **Efficient Core-set Selection for Deep Learning Through Squared Loss Minimization.**
+Implementation of a Maximum Reduction as Maximum Contribution sampler. This is an unofficial implementation inspired by the paper: Efficient Core-set Selection for Deep Learning Through Squared Loss Minimization.
 
 ### 7. `ELFSCoreset.py*************`
-Implementation of a **Maximum Reduction as Maximum Contribution sampler**. This is an unofficial implementation inspired by the paper: **Efficient Core-set Selection for Deep Learning Through Squared Loss Minimization.**
+
 
 ### 8. `MRC.py`
-Implementation of a **Minimum Redundancy Constraint sampler** that leverages **GPU acceleration** to enable efficient and scalable subset selection in large feature spaces.
-This is an unofficial implementation inspired by the paper: **Unsupervised surface defect detection using dictionary-based sparse representation**.
+Implementation of a Minimum Redundancy Constraint sampler that enableس efficient and scalable subset selection in large feature spaces.
+This is an unofficial implementation inspired by the paper: Unsupervised surface defect detection using dictionary-based sparse representation.
 
 ### 9. `KCenterGreedySampler.py`
-Implementation of a **K-Center Greedy Sampler** for coreset selection. This implementation inspired by the core idea of diversity-based sampling, where samples are iteratively selected to maximize the minimum distance to already chosen points, ensuring wide coverage of the feature space.
+Implementation of a K-Center Greedy Sampler for coreset selection. This implementation inspired by the core idea of diversity-based sampling, where samples are iteratively selected to maximize the minimum distance to already chosen points, ensuring wide coverage of the feature space.
 
 ### 10. `KMedoids.py`
-Implementation of a **K-Medoids Sampler** that leverages **GPU acceleration** and **batch-wise distance computation** to efficiently handle large datasets.  
-It preserves the property that **medoids are actual data points** and safely manages **tuple or numpy features**, making it suitable for coreset selection in high-dimensional feature spaces.
-
-
-
-
+Implementation of a K-Medoids Sampler that leverages batch-wise distance computation to efficiently handle large datasets.  
+It preserves the property that medoids are actual data points and safely manages tuple or numpy features, making it suitable for coreset selection in high-dimensional feature spaces.
 
 ---
 
