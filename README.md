@@ -26,11 +26,11 @@ Implementation of a Maximum Reduction as Maximum Contribution sampler. This is a
 ### 7. `Improved_ELFSCoreset.py`
 Our Approximate ELFSCoresetSampler evaluates each feature according to three complementary criteria: representativeness, measured as the distance from the mean of all features; density, estimated approximately via distances to a subset of reference points to capture local concentration; and instability, which quantifies the sensitivity of features to small random perturbations. Each score is normalized and combined into a composite metric, from which the top candidate features are selected. To ensure diversity, a k-center greedy selection is applied on this candidate pool, resulting in a subsample that balances coverage, local density, and robustness to noise, while remaining efficient in both memory usage and computation.
 
-### 8. `MRC.py`
+### 8. `MRCCoreset.py`
 Implementation of a Minimum Redundancy Constraint sampler that enables efficient and scalable subset selection in large feature spaces.
 This is an unofficial implementation inspired by the paper: Unsupervised surface defect detection using dictionary-based sparse representation.
 
-### 9. `KCenterGreedySampler.py`
+### 9. `KCenterSampler.py`
 Implementation of a K-Center Greedy Sampler for coreset selection. This implementation inspired by the core idea of diversity-based sampling, where samples are iteratively selected to maximize the minimum distance to already chosen points, ensuring wide coverage of the feature space.
 
 ### 10. `KMedoids.py`
@@ -61,6 +61,9 @@ The summary notes file of the ELFS paper.
 The summary notes file for the Minimum Redundancy and PatchCore papers.
 
 ### 3. `mynotes_CCS.pdf`
+The summary notes file of the CCS paper.
+
+### 3. `subset_methods_results.pdf`
 The summary notes file of the CCS paper.
 
 ## Applications
