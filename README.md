@@ -8,12 +8,10 @@ These methods are useful for selecting diverse and representative subsets of dat
 ## Important Notes on Files
 
 ### 1. `LeverageCoreset.py***************`
-Implementation of a **Greedy k-DPP Sampler** that leverages **GPU acceleration** for faster computations.  
-It is well-suited for large-scale datasets where efficiency is critical.
+Leverage Score Sampling is a coreset selection technique that selects a representative subset of data by estimating the importance of each sample with respect to the low-rank structure of the feature space. The method first normalizes the data, then applies a fast randomized Singular Value Decomposition (SVD) to approximate the dominant subspace. Leverage scores are computed as the squared row norms of the left singular vectors, representing how strongly each sample influences the principal subspace. Finally, samples are drawn probabilistically according to these scores, ensuring that highly informative points are more likely to be selected. This approach is particularly effective for large-scale learning tasks where maintaining the geometric structure of the data with a smaller subset is crucial.
 
 ### 2. `FacilityLocation.py*********`
-Implementation of a **Greedy k-DPP Sampler** that leverages **GPU acceleration** for faster computations.  
-It is well-suited for large-scale datasets where efficiency is critical.
+Facility Location is a submodular coreset selection method that aims to select a diverse and representative subset of samples by maximizing the coverage of the original dataset. The objective is to ensure that each data point in the full dataset is highly similar to at least one selected sample. In our implementation, cosine similarity is used to measure pairwise affinity, and the Apricot library is employed for efficient greedy optimization of the submodular objective. To improve scalability for large datasets, an approximate variant is also used, where the selection is performed on a randomly sampled subset of the data and then mapped back to the original dataset. More details in the paper "Submodular Function Maximization"
 
 ### 3. `kdppCoreset`
 Implementation of a **Greedy k-DPP Sampler** that leverages **GPU acceleration** for faster computations.  
