@@ -20,7 +20,7 @@ The CLARA algorithm is a scalable sampling-based extension of medoid‑based clu
 ### 5. `KMeansPlusCoreset.py`
 The KMeansPlusSampler is a clustering-based sampling method designed to select a representative subset of data. It first optionally draws a random subset of the full dataset to reduce computation, then applies MiniBatchKMeans with k-means++ initialization to find cluster centers efficiently. The number of clusters is determined by the desired sampling percentage, ensuring that the subset size reflects the proportion of data to be selected. Finally, for each cluster center, the closest actual data point in the full dataset is chosen, producing a subset of samples that effectively represents the distribution and diversity of the original dataset. This approach is particularly useful for coreset selection, data summarization, and speeding up large-scale machine learning tasks.
 
-### 6. `MRMC.py`
+### 6. `MRMCCoreset.py`
 Implementation of a Maximum Reduction as Maximum Contribution sampler. This is an unofficial implementation inspired by the paper: Efficient Core-set Selection for Deep Learning Through Squared Loss Minimization.
 
 ### 7. `Improved_ELFSCoreset.py`
