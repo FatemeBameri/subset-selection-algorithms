@@ -5,7 +5,7 @@ These methods are useful for selecting diverse and representative subsets of dat
 
 ---
 
-## Files
+## Important Notes on Files
 
 ### 1. `LeverageCoreset.py***************`
 Implementation of a **Greedy k-DPP Sampler** that leverages **GPU acceleration** for faster computations.  
