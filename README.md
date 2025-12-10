@@ -36,9 +36,9 @@ Implementation of a K-Center Greedy Sampler for coreset selection. This implemen
 ### 10. `KMedoids.py`
 Implementation of a K-Medoids Sampler that leverages batch-wise distance computation to efficiently handle large datasets. It preserves the property that medoids are actual data points and safely manages tuple or numpy features, making it suitable for coreset selection in high-dimensional feature spaces.
 
-### `our_run_patchcore.py`
-
+### `11. our_run_patchcore.py`
 This code is based on the run_patchcore.py file from the PatchCore repository and demonstrates how different subset selection methods are called and configured, along with the initialization of their parameters. The design allows for flexibility by offering various subset selection techniques, each with configurable parameters tailored to specific use cases, providing users with adaptable options for their tasks.
+
 ---
 
 # supporting-scripts
