@@ -38,6 +38,7 @@ Implementation of a K-Medoids Sampler that leverages batch-wise distance computa
 
 ### `our_run_patchcore.py`
 
+This code is based on the run_patchcore.py file from the PatchCore repository and demonstrates how different subset selection methods are called and configured, along with the initialization of their parameters. The design allows for flexibility by offering various subset selection techniques, each with configurable parameters tailored to specific use cases, providing users with adaptable options for their tasks.
 ---
 
 # supporting-scripts
