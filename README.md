@@ -67,7 +67,7 @@ The summary notes file for the Minimum Redundancy and PatchCore papers.
 The summary notes file of the CCS paper.
 
 ### 4. `subset_methods_results.pdf`
-The summary notes file of the CCS paper.
+The proposed methods are evaluated based on five criteria, including image-level AUROC, pixel-level AUROC, PRO (Per-Region Overlap) score, training time, and inference time, allowing for a thorough comparison of both detection performance and computational efficiency.
 
 ## Applications
 - Selecting diverse samples for machine learning  
