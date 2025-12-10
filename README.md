@@ -73,4 +73,6 @@ The summary notes file of the CCS paper.
 - Selecting diverse samples for machine learning  
 - Data summarization or representative selection  
 - Reducing dataset size while maintaining diversity
-  
+
+## Implementation Details
+This implementation builds upon the original [PatchCore coreset method] (https://github.com/amazon-science/patchcore-inspection/tree/main) and extends it by integrating nine additional coreset-based subset selection strategies. All methods are developed within a unified framework that follows PatchCore’s execution pipeline to ensure fair and consistent evaluation.
