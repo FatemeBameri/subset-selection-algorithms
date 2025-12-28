@@ -4,164 +4,97 @@ from tqdm import tqdm
 import abc
 from typing import Union
 
-class MRMCCoresetSampler(BaseSampler):
+
+class HybridSquaredLossMRMC(BaseSampler):
+    """
+    Hybrid sampler: first top-k squared-loss (variance), then greedy k-center selection.
+    Compatible with PatchCore memory bank.
+    """
+
     def __init__(
         self,
         percentage: float,
-        model: nn.Module,
-        dataloader,
         device: torch.device,
-        R: int = 10,
-        rho: float = 0.3,
-        gamma: float = 2,
-        lr: float = 0.1,
-        proxy_epochs: int = 200
+        squared_loss_fraction: float = 0.5,
+        dimension_to_project_features_to: int = 128,
     ):
+        """
+        Args:
+            percentage (float): final fraction of features to keep
+            squared_loss_fraction (float): fraction to keep after squared-loss selection before k-center
+            device (torch.device)
+        """
         super().__init__(percentage)
-        self.model = model
-        self.dataloader = dataloader
         self.device = device
-        self.R = R
-        self.rho = rho
-        self.gamma = gamma
-        self.lr = lr
-        self.proxy_epochs = proxy_epochs
+        self.squared_loss_fraction = squared_loss_fraction
+        self.dimension_to_project_features_to = dimension_to_project_features_to
 
-    def run(self, features=None):
-        #self._store_type(features)
-        self.model.to(self.device)
-        self.model.train()
+    def _reduce_features(self, features: torch.Tensor) -> torch.Tensor:
+        # اگر لازم باشد projection اضافه کنید، می‌توانید اینجا باشد
+        return features
 
-        num_samples = len(self.dataloader.dataset)
-        coreset_size = int(self.percentage * num_samples)
-        all_losses = torch.zeros((self.R, num_samples), device=self.device)
+    def run(self, features: Union[torch.Tensor, np.ndarray]) -> Union[torch.Tensor, np.ndarray]:
 
-        criterion = nn.CrossEntropyLoss(reduction='none')
-        optimizer = torch.optim.SGD(self.model.parameters(), lr=0.1, momentum=0.9,weight_decay=5e-4)
+        if self.percentage >= 1.0:
+            return features
 
-        # ------------------------ Phase 1: R rounds mini-batch SGD ------------------------
-        for r in range(self.R):
-            print(f"[Round {r+1}/{self.R}] Training model and collecting losses...")
-            batch_losses = torch.zeros(num_samples, device=self.device)
-            for batch_idx, (indices, (inputs, targets)) in enumerate(tqdm(self.dataloader)):
-                inputs, targets = inputs.to(self.device), targets.to(self.device)
-                optimizer.zero_grad()
-                outputs = self.model(inputs)
-                loss = criterion(outputs, targets)
-                loss_mean = loss.mean()
-                loss_mean.backward()
-                optimizer.step()
-                batch_losses[indices] = loss.detach()
-            all_losses[r] = batch_losses
+        self._store_type(features)
 
-        # ------------------------ Phase 2: compute φ_MRMC ------------------------
-        print("Computing φ_MRMC (vectorized exponential fitting)...")
+        if isinstance(features, np.ndarray):
+            features = torch.from_numpy(features)
 
-        R = self.R
-        r_values = torch.arange(1, R + 1, device=self.device, dtype=torch.float32)  # (R,)
-        num_samples = all_losses.shape[1]
+        features = features.to(self.device)
+        reduced_features = self._reduce_features(features)
 
-        # جلوگیری از log(0)
-        all_losses = torch.clamp(all_losses, min=1e-8)
+        # ----------------------------
+        # مرحله 1: Top-k squared-loss
+        # ----------------------------
+        num_initial = max(1, int(len(features) * self.squared_loss_fraction))
+        mu = torch.mean(reduced_features, dim=0, keepdim=True)
+        squared_loss = torch.sum((reduced_features - mu)**2, dim=1)
+        _, topk_indices = torch.topk(squared_loss, k=num_initial, largest=True)
+        features_topk = reduced_features[topk_indices]
 
-        # log(losses) برای برازش log(l(r)) = log(q) - w*r
-        y = torch.log(all_losses)  # (R, N)
-        mean_r = torch.mean(r_values)
-        mean_y = torch.mean(y, dim=0)  # (N,)
+        # ----------------------------
+        # مرحله 2: Greedy k-center روی subset
+        # ----------------------------
+        num_final = max(1, int(len(features) * self.percentage))
+        selected_indices = self._greedy_k_center(features_topk, num_final)
 
-        # محاسبه‌ی کوواریانس r و log(loss)
-        cov_ry = torch.sum((r_values.unsqueeze(1) - mean_r) * (y - mean_y.unsqueeze(0)), dim=0)
-        var_r = torch.sum((r_values - mean_r) ** 2)
+        final_indices = topk_indices[selected_indices]
+        features = features[final_indices]
 
-        # محاسبه‌ی w_j و q_j
-        w = -cov_ry / (var_r + 1e-12)  # (N,)
-        log_q = mean_y + w * mean_r  # (N,)
-        q = torch.exp(log_q)  # (N,)
 
-        # φ_MRMC بر اساس فرمول مقاله φ = q * (1 - exp(-w * R))
-        phi_mrmc = q * (1 - torch.exp(-w * R))
+        return self._restore_type(features)
 
-        print(f"φ_MRMC computed: shape={phi_mrmc.shape}, min={phi_mrmc.min():.4f}, max={phi_mrmc.max():.4f}")
+    @staticmethod
+    def _compute_distances(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
+        """Batchwise Euclidean distance."""
+        a2 = (a**2).sum(dim=1, keepdim=True)
+        b2 = (b**2).sum(dim=1, keepdim=True).T
+        ab = a @ b.T
+        return torch.sqrt((a2 - 2*ab + b2).clamp(min=0))
 
-        # ------------------------ Phase 3: coreset selection ------------------------
-        if self.rho == 1:
-            # اگر rho=1، تمام coreset بر اساس φ_MRMC
-            _, topk_idx = torch.topk(phi_mrmc, coreset_size)
-            return self._restore_type(topk_idx)
+    def _greedy_k_center(self, features: torch.Tensor, k: int) -> np.ndarray:
+        """Greedy k-center selection (deterministic)."""
+        N = features.shape[0]
+        if k >= N:
+            return np.arange(N)
 
-        # ------------------------ Phase 4: top ρ|C| for proxy ------------------------
-        num_top = int(self.rho * coreset_size)
-        _, top_indices = torch.topk(phi_mrmc, num_top)
-        top_indices = top_indices.to(self.device)  # برای GPU
+        # Initialize distances
+        distances = torch.full((N,), float('inf'), device=features.device)
+        selected = []
 
-        # ------------------------ Phase 5: train lightweight proxy model ------------------------
-        feature_dim = self.model(
-            torch.zeros(1, *self.dataloader.dataset[0][1][0].shape).to(self.device)
-        ).flatten(1).shape[1]
+        # pick first point arbitrarily
+        first_idx = 0
+        selected.append(first_idx)
+        dist_new = self._compute_distances(features, features[first_idx:first_idx+1]).squeeze()
+        distances = torch.min(distances, dist_new)
 
-        proxy = nn.Linear(feature_dim, 1).to(self.device)
-        proxy_opt = torch.optim.Adam(proxy.parameters(), lr=self.lr)
+        for _ in range(1, k):
+            next_idx = torch.argmax(distances).item()
+            selected.append(next_idx)
+            dist_new = self._compute_distances(features, features[next_idx:next_idx+1]).squeeze()
+            distances = torch.min(distances, dist_new)
 
-        print(f"Training proxy model on top {num_top} samples...")
-        for epoch in range(self.proxy_epochs):
-            proxy_loss_sum = 0.0
-            for batch_idx, (indices, (inputs, _)) in enumerate(self.dataloader):
-                inputs = inputs.to(self.device)
-                indices = indices.to(self.device)
-                mask = (indices.unsqueeze(1) == top_indices).any(dim=1)
-                if mask.sum() == 0:
-                    continue
-                inputs_subset = inputs[mask]
-                idx_subset = indices[mask]
-
-                with torch.no_grad():
-                    feats = self.model(inputs_subset).flatten(1)
-
-                preds = proxy(feats).squeeze()
-                true_vals = phi_mrmc[idx_subset]
-                loss = torch.mean((preds - true_vals) ** 2)
-
-                proxy_opt.zero_grad()
-                loss.backward()
-                proxy_opt.step()
-                proxy_loss_sum += loss.item()
-            print(f"Proxy Epoch {epoch + 1}: Loss={proxy_loss_sum:.4f}")
-
-        # ------------------------ Phase 6: compute φ_reg for remaining samples ------------------------
-        all_indices = torch.arange(len(phi_mrmc), device=self.device)
-        remaining_mask = ~torch.isin(all_indices, top_indices)
-        remaining_indices = all_indices[remaining_mask]
-
-        phi_reg = torch.zeros_like(phi_mrmc)
-        with torch.no_grad():
-            for batch_idx, (indices, (inputs, _)) in enumerate(self.dataloader):
-                inputs = inputs.to(self.device)
-                indices = indices.to(self.device)
-                mask = torch.isin(indices, remaining_indices)
-                if mask.sum() == 0:
-                    continue
-                inputs_subset = inputs[mask]
-                idx_subset = indices[mask]
-
-                feats = self.model(inputs_subset).flatten(1)
-                preds = proxy(feats).squeeze()
-                # φ_reg بر اساس اختلاف با φ_MRMC واقعی
-                loss_vals = torch.abs(preds - phi_mrmc[idx_subset])
-                phi_reg[idx_subset] = torch.exp(-loss_vals)
-
-        # ------------------------ Phase 7: final selection ------------------------
-        num_remaining = coreset_size - num_top
-        # ترکیب MRMC و reg مطابق Eq.21
-        final_scores = phi_mrmc[remaining_indices] * (phi_reg[remaining_indices] ** self.gamma)
-        _, remaining_top_idx = torch.topk(final_scores, num_remaining)
-        final_indices = torch.cat([top_indices, remaining_indices[remaining_top_idx]])
-
-        # ✅ نهایی: حالا فیچرهای واقعی برگردانده می‌شود، نه فقط ایندکس‌ها
-        if features is not None:
-            features_np = features.detach().cpu().numpy() if torch.is_tensor(features) else np.asarray(features)
-            selected_features = features_np[final_indices.cpu().numpy()]
-            print(f"[DEBUG] Returning selected features with shape {selected_features.shape}")
-            return selected_features
-
-        # اگر فیچر ورودی None باشد، فقط ایندکس‌ها را بده (برای سازگاری)
-        return final_indices
+        return np.array(selected)
