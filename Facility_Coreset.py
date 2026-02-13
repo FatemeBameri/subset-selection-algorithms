@@ -3,7 +3,6 @@ import torch
 from apricot import FacilityLocationSelection
 from typing import Union
 
-
 class ApproximateFacilitySampler(BaseSampler):
     def __init__(
             self,
