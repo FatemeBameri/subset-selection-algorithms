@@ -3,7 +3,7 @@
 This repository provides implementations of **subset selection algorithms** based on **Determinantal Point Processes sampler, CLARANS sampler, K-Medoids sampler, Minimum Redundancy Constraint sampler, Maximum Reduction as Maximum Contribution sampler, KCenterGreedy sampler, ELFS sampler, Facility Location sampler, Leverage sampler, Kmeans++ sampler**. These methods are useful for selecting diverse and representative subsets of data, especially in machine learning and AI applications.
 
 
-## Important Notes on Files
+## Important Files
 
 ### 1. `LeverageCoreset.py`
 Leverage Score Sampling is a coreset selection technique that selects a representative subset of data by estimating the importance of each sample with respect to the low-rank structure of the feature space. The method first normalizes the data, then applies a fast randomized Singular Value Decomposition (SVD) to approximate the dominant subspace. Leverage scores are computed as the squared row norms of the left singular vectors, representing how strongly each sample influences the principal subspace. Finally, samples are drawn probabilistically according to these scores, ensuring that highly informative points are more likely to be selected. This approach is particularly effective for large-scale learning tasks where maintaining the geometric structure of the data with a smaller subset is crucial.
