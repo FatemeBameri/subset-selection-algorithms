@@ -1,6 +1,5 @@
-# ---------------------------
-# ELFSCoresetSampler (ELFS-inspired, PatchCore-friendly)
-# ---------------------------
+from typing import Union, Optional
+
 class ELFSCoresetSampler(BaseSampler):
     """
     ELFS-inspired coreset sampler for patch-features (PatchCore).
@@ -390,3 +389,4 @@ class ELFSCoresetSampler(BaseSampler):
         # return reduced features (same type as input)
         res = feats[selected_indices]
         return self._restore_type(res)
+
