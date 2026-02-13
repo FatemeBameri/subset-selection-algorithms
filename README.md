@@ -52,29 +52,29 @@ These scripts provide supporting functionality used throughout the project.
 
 ## Files
 
-### 1. `train_features_mvtec.py`
+### 1. train_features_mvtec.py
 Feature extraction code for the train set in the MVTec dataset — extracting features from layers 2 and 3 of the ResNet, upsampling layer 3, and then concatenating them.
 
-### 2. `test_features_mvtec.py`
+### 2. test_features_mvtec.py
 Feature extraction code for the test set in the MVTec dataset — extracting features from layers 2 and 3 of the ResNet, upsampling layer 3, and then concatenating them. For anomaly images, two separate feature sets should be extracted and saved for each image, containing the normal and anomalous vectors separately.
 
-### 3. `mvtec_few_shot_split.py`
+### 3. mvtec_few_shot_split.py
 This script randomly selects a fixed percentage of samples from each class directory and copies them into a new dataset folder. It is intended for few-shot anomaly detection experiments and ensures reproducibility via a fixed random seed.
 
 ---
 
 # Related Notes
 
-### 1. `Mynotes_ELFS.pdf`
+### 1. Mynotes_ELFS.pdf
 The summary notes file of the ELFS paper.
 
-### 2. `mynotes_patchcore_minimumredundancy.pdf`
+### 2. mynotes_patchcore_minimumredundancy.pdf
 The summary notes file for the Minimum Redundancy and PatchCore papers.
 
-### 3. `mynotes_CCS.pdf`
+### 3. mynotes_CCS.pdf
 The summary notes file of the CCS paper.
 
-### 4. `subset_methods_results.pdf`
+### 4. subset_methods_results.pdf
 The proposed methods are evaluated based on five criteria, including image-level AUROC, pixel-level AUROC, PRO (Per-Region Overlap) score, training time, and inference time, allowing for a thorough comparison of both detection performance and computational efficiency.
 
 ## Applications
