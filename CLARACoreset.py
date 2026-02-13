@@ -5,7 +5,6 @@ from sklearn.metrics import pairwise_distances
 from typing import Union
 import abc
 
-# ---- نسخه CLARA با device ----
 class CLARASampler(BaseSampler):
     """
     CLARA (Clustering LARge Applications) Sampler.
@@ -15,7 +14,7 @@ class CLARASampler(BaseSampler):
     def __init__(
         self,
         percentage: float,
-        n_clusters: int = 10,
+        n_clusters: int,
         n_iter: int = 5,
         random_state: int = 42,
         device: Union[str, torch.device] = "cpu",
@@ -36,7 +35,6 @@ class CLARASampler(BaseSampler):
         """
         self._store_type(features)
 
-        # تبدیل به NumPy برای KMedoids
         if isinstance(features, torch.Tensor):
             features_np = features.detach().cpu().numpy()
         else:
@@ -44,16 +42,16 @@ class CLARASampler(BaseSampler):
 
         N = len(features_np)
         n_samples = max(1, int(N * self.percentage))
+        self.n_clusters = n_samples
 
         best_medoids = None
         best_cost = np.inf
 
         for i in range(self.n_iter):
-            subset_size = min(1000, N)
+            subset_size = min(n_samples, N)
             subset_idx = self.random_state.choice(N, subset_size, replace=False)
             subset = features_np[subset_idx]
 
-            # اجرای KMedoids روی subset
             kmedoids = KMedoids(
                 n_clusters=min(self.n_clusters, subset.shape[0]),
                 metric="euclidean",
@@ -62,7 +60,6 @@ class CLARASampler(BaseSampler):
             kmedoids.fit(subset)
             medoids = kmedoids.cluster_centers_
 
-            # هزینه روی کل داده‌ها
             distances = pairwise_distances(features_np, medoids, metric="euclidean")
             cost = np.sum(np.min(distances, axis=1))
 
@@ -72,14 +69,12 @@ class CLARASampler(BaseSampler):
                 best_cost = cost
                 best_medoids = medoids
 
-        # انتخاب نزدیک‌ترین داده‌ها به medoids
         distances = pairwise_distances(features_np, best_medoids, metric="euclidean")
         closest_indices = np.argmin(distances, axis=0)
         selected_indices = np.unique(closest_indices)[:n_samples]
 
         subset = features_np[selected_indices]
 
-        # بازگرداندن نوع اصلی و انتقال به device اصلی
         subset_tensor = torch.tensor(subset, device=self.device)
         if self.features_is_numpy:
             return subset_tensor.cpu().numpy()
