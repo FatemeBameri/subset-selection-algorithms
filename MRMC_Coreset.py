@@ -1,16 +1,9 @@
-import torch
-import torch.nn as nn
-from tqdm import tqdm
-import abc
-from typing import Union
-
 
 class HybridSquaredLossMRMC(BaseSampler):
     """
     Hybrid sampler: first top-k squared-loss (variance), then greedy k-center selection.
     Compatible with PatchCore memory bank.
     """
-
     def __init__(
         self,
         percentage: float,
@@ -30,7 +23,6 @@ class HybridSquaredLossMRMC(BaseSampler):
         self.dimension_to_project_features_to = dimension_to_project_features_to
 
     def _reduce_features(self, features: torch.Tensor) -> torch.Tensor:
-        # اگر لازم باشد projection اضافه کنید، می‌توانید اینجا باشد
         return features
 
     def run(self, features: Union[torch.Tensor, np.ndarray]) -> Union[torch.Tensor, np.ndarray]:
@@ -46,18 +38,12 @@ class HybridSquaredLossMRMC(BaseSampler):
         features = features.to(self.device)
         reduced_features = self._reduce_features(features)
 
-        # ----------------------------
-        # مرحله 1: Top-k squared-loss
-        # ----------------------------
         num_initial = max(1, int(len(features) * self.squared_loss_fraction))
         mu = torch.mean(reduced_features, dim=0, keepdim=True)
         squared_loss = torch.sum((reduced_features - mu)**2, dim=1)
         _, topk_indices = torch.topk(squared_loss, k=num_initial, largest=True)
         features_topk = reduced_features[topk_indices]
 
-        # ----------------------------
-        # مرحله 2: Greedy k-center روی subset
-        # ----------------------------
         num_final = max(1, int(len(features) * self.percentage))
         selected_indices = self._greedy_k_center(features_topk, num_final)
 
@@ -98,3 +84,4 @@ class HybridSquaredLossMRMC(BaseSampler):
             distances = torch.min(distances, dist_new)
 
         return np.array(selected)
+
