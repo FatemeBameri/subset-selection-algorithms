@@ -1,48 +1,7 @@
-from apricot import FacilityLocationSelection
-from typing import Union
 import numpy as np
 import torch
-
-
-class FacilityLocationSampler(BaseSampler):
-    """
-    Submodular Facility Location coreset sampler using apricot.
-    Efficient, diverse subset selection suitable for large feature sets.
-    """
-
-    def __init__(self, percentage: float, device: str = "cpu"):
-        super().__init__(percentage)
-        self.device = torch.device(device)
-
-    def run(self, features):
-      
-        self._store_type(features)
-
-        # numpy
-        if isinstance(features, torch.Tensor):
-            X = features.detach().cpu().numpy()
-        else:
-            X = np.array(features)
-
-        n = len(X)
-        k = max(1, int(n * self.percentage))
-
-        # Facility Location selection
-        selector = FacilityLocationSelection(
-            n_samples=k,
-            metric='cosine',     # می‌توان تغییر داد به 'euclidean' یا 'precomputed'
-            random_state=0
-        )
-
-        subset = selector.fit_transform(X)
-
-        if not self.features_is_numpy:
-            subset = torch.tensor(subset, device=self.device)
-
-        return subset
-
-#############################
-############################
+from apricot import FacilityLocationSelection
+from typing import Union
 
 
 class ApproximateFacilitySampler(BaseSampler):
@@ -81,6 +40,7 @@ class ApproximateFacilitySampler(BaseSampler):
 
         N = X.shape[0]
         k = max(1, int(N * self.percentage))
+        self.subset_size = k
 
         # Step 1: Select a random subset
         subset_idx = np.random.choice(N, min(self.subset_size, N), replace=False)
