@@ -7,6 +7,7 @@ These methods are designed to select diverse, representative, and informative su
 ## Important Files
 
 ### 1. patchcore_coreset.py
+The patchcore coreset selects a small, representative subset of samples that preserves the diversity and coverage of the full dataset, ensuring that every original data point is closely represented by at least one selected sample. This approach maximizes the overall similarity between the selected subset and the full dataset, while approximate variants allow efficient scaling to large datasets without sacrificing representativeness.
 
 ### 2. Leverage_coreset.py
 Leverage Score Sampling is a coreset selection technique that selects a representative subset of data by estimating the importance of each sample with respect to the low-rank structure of the feature space. The method first normalizes the data, then applies a fast randomized Singular Value Decomposition (SVD) to approximate the dominant subspace. Leverage scores are computed as the squared row norms of the left singular vectors, representing how strongly each sample influences the principal subspace. Finally, samples are drawn probabilistically according to these scores, ensuring that highly informative points are more likely to be selected. This approach is particularly effective for large-scale learning tasks where maintaining the geometric structure of the data with a smaller subset is crucial.
