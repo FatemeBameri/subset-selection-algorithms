@@ -4,7 +4,7 @@ This repository provides implementations of several advanced subset selection an
 These methods are designed to select diverse, representative, and informative subsets from large datasets. They are particularly useful in machine learning and AI applications where efficient memory usage, scalability, and data diversity are critical — such as anomaly detection, active learning, and large-scale feature memory construction.
 
 
-## Important Files
+## Key Python Files
 
 ### 1. patchcore_coreset.py
 The patchcore coreset selects a small, representative subset of samples that preserves the diversity and coverage of the full dataset, ensuring that every original data point is closely represented by at least one selected sample. This approach maximizes the overall similarity between the selected subset and the full dataset, while approximate variants allow efficient scaling to large datasets without sacrificing representativeness.
