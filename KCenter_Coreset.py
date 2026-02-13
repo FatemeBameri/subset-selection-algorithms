@@ -5,62 +5,6 @@ from tqdm import tqdm
 from typing import Union
 from sklearn.metrics import pairwise_distances
 
-
-class KCenterGreedySampler(BaseSampler):
-    def __init__(self, percentage: float, device: torch.device):
-        super().__init__(percentage)
-        self.device = device
-
-    def run(
-            self, features: Union[torch.Tensor, np.ndarray]
-    ) -> Union[torch.Tensor, np.ndarray]:
-        """
-        Perform greedy k-center sampling on input features.
-
-        Args:
-            features: Tensor [N, D] or ndarray [N, D] of features
-
-        Returns:
-            Subset of features with size determined by self.percentage
-        """
-        self._store_type(features)
-
-        if not isinstance(features, np.ndarray):
-            features_np = features.cpu().numpy()
-        else:
-            features_np = features
-
-        n_samples = max(1, int(len(features_np) * self.percentage))
-        selected_indices = self._kcenter_greedy(features_np, n_samples)
-        subset = features_np[selected_indices]
-
-        if not self.features_is_numpy:
-            subset = torch.tensor(subset, device=self.features_device)
-        return subset
-
-    @staticmethod
-    def _kcenter_greedy(X: np.ndarray, n_samples: int) -> np.ndarray:
-        N = X.shape[0]
-        if n_samples >= N:
-            return np.arange(N)
-
-        selected = [np.random.randint(N)]
-        distances = pairwise_distances(X, X[selected], metric="euclidean").flatten()
-
-        for _ in range(1, n_samples):
-            idx = np.argmax(distances)
-            selected.append(idx)
-
-            new_dist = pairwise_distances(X, X[[idx]], metric="euclidean").flatten()
-            distances = np.minimum(distances, new_dist)
-
-        return np.array(selected)
-        
-        
-#*****************************************************
-#*****************************************************
-
-
 class ApproximateKCenterGreedySampler(BaseSampler):
     def __init__(
         self,
@@ -73,7 +17,7 @@ class ApproximateKCenterGreedySampler(BaseSampler):
         self.device = device
         self.number_of_starting_points = number_of_starting_points
         self.batch_size = batch_size
-        self.use_faiss = faiss_available  
+        self.use_faiss = faiss_available
 
     def run(self, features):
         self._store_type(features)
@@ -109,6 +53,7 @@ class ApproximateKCenterGreedySampler(BaseSampler):
         return np.array(selected)
 
     def _compute_min_distances(self, X, centers):
+        
         if self.use_faiss:
             X32 = X.astype(np.float32)
             centers32 = centers.astype(np.float32)
