@@ -6,15 +6,12 @@ class KMeansPlusSampler(BaseSampler):
         super().__init__(percentage)
         self.random_state = random_state
         self.batch_size = batch_size
-        self.sample_size = sample_size  # تعداد نمونه‌ای که قبل از KMeans انتخاب می‌کنیم
+        self.sample_size = sample_size 
 
     def run(self, features):
         self._store_type(features)
-
-        # تبدیل به numpy اگر Tensor باشد
         features_np = features.detach().cpu().numpy() if isinstance(features, torch.Tensor) else features
 
-        # زیرنمونه‌گیری تصادفی از کل داده‌ها
         if len(features_np) > self.sample_size:
             idxs = np.random.choice(len(features_np), self.sample_size, replace=False)
             features_sample = features_np[idxs]
@@ -23,7 +20,6 @@ class KMeansPlusSampler(BaseSampler):
 
         n_clusters = max(1, int(len(features_np) * self.percentage))
 
-        # اجرای MiniBatchKMeans روی نمونه کوچک
         kmeans = MiniBatchKMeans(
             n_clusters=n_clusters,
             init="k-means++",
@@ -34,13 +30,10 @@ class KMeansPlusSampler(BaseSampler):
         )
         kmeans.fit(features_sample)
 
-        # تبدیل مراکز به Tensor و انتقال به همان device features
         if not isinstance(features, torch.Tensor):
-            features = torch.tensor(features, dtype=torch.float32, device='cpu')  # یا device مورد نظر
+            features = torch.tensor(features, dtype=torch.float32, device='cpu') 
 
         cluster_centers = torch.tensor(kmeans.cluster_centers_, device=features.device, dtype=features.dtype)
-
-        # محاسبه فاصله با torch و انتخاب نزدیک‌ترین نقاط از کل دیتاست
         distances = torch.cdist(cluster_centers, features)
         closest_indices = torch.argmin(distances, dim=1)
         subset = features[closest_indices]
