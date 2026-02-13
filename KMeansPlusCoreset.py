@@ -21,7 +21,7 @@ class KMeansPlusSampler(BaseSampler):
         else:
             features_sample = features_np
 
-        n_clusters = max(1, int(len(features_sample) * self.percentage))
+        n_clusters = max(1, int(len(features_np) * self.percentage))
 
         # اجرای MiniBatchKMeans روی نمونه کوچک
         kmeans = MiniBatchKMeans(
