@@ -7,8 +7,8 @@ class ApproximateFacilitySampler(BaseSampler):
     def __init__(
             self,
             percentage: float,
-            device: str = "cpu",
-            subset_size: int = 20000,
+            device: str = "cuda",
+            subset_size: int = 30000,
             metric: str = "cosine",
             random_state: int = 0
     ):
@@ -25,8 +25,8 @@ class ApproximateFacilitySampler(BaseSampler):
         super().__init__(percentage)
         self.device = torch.device(device)
         self.subset_size = subset_size
-        self.metric = metric
-        self.random_state = random_state
+        self.my_metric = metric
+
 
     def run(self, features: Union[np.ndarray, torch.Tensor]) -> Union[np.ndarray, torch.Tensor]:
         self._store_type(features)
@@ -39,17 +39,17 @@ class ApproximateFacilitySampler(BaseSampler):
 
         N = X.shape[0]
         k = max(1, int(N * self.percentage))
-        self.subset_size = k
+        #self.subset_size = k
 
         # Step 1: Select a random subset
         subset_idx = np.random.choice(N, min(self.subset_size, N), replace=False)
         X_sub = X[subset_idx]
 
+
         # Step 2: Apply Facility Location Selection on subset
         fl = FacilityLocationSelection(
             n_samples=min(k, len(X_sub)),
-            metric=self.metric,
-            random_state=self.random_state
+            metric=self.my_metric,
         )
         fl.fit(X_sub)
         selected_sub_idx = fl.ranking  # indices within the subset
@@ -58,8 +58,10 @@ class ApproximateFacilitySampler(BaseSampler):
         selected_idx = subset_idx[selected_sub_idx]
         subset = X[selected_idx]
 
+
         # Restore type
         if not self.features_is_numpy:
             subset = torch.tensor(subset, device=self.features_device)
 
         return subset
+
