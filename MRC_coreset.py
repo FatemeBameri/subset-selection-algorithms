@@ -5,9 +5,10 @@ import torch
 
 class FastApproxMRCSampler(BaseSampler):
     """
-    Multi-run sampler with:
-       - greedy k-center selection (approximate)
-       - approximate entropy metric: mean(d) * std(d)
+    Multi-run approximate greedy K-Center sampler with:
+       - random projection to a lower-dimensional feature space
+       - greedy farthest-first selection
+       - covering-radius-based run selection
     """
 
     def __init__(self, percentage=0.1, n_runs=5, proj_dim=128, device="cuda"):
