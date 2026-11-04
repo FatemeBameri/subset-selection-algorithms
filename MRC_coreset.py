@@ -33,7 +33,7 @@ class FastApproxMRCSampler(BaseSampler):
             ) / (self.proj_dim ** 0.5)
         return X @ self.proj
 
-    def _approx_entropy(self, d):
+    def __covering_radius(self, d):
         """Very fast entropy approximation."""
         #return d.mean() * d.std()
         
@@ -79,8 +79,8 @@ class FastApproxMRCSampler(BaseSampler):
 
             selected_tensor = torch.tensor(selected, device=self.device)
 
-            # ---- Approx entropy ----
-            score = self._approx_entropy(d)
+            
+            score = self._covering_radius(d)
 
             if score < best_score:
                 best_score = score
