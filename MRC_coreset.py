@@ -35,7 +35,15 @@ class FastApproxMRCSampler(BaseSampler):
 
     def _approx_entropy(self, d):
         """Very fast entropy approximation."""
-        return d.mean() * d.std()
+        #return d.mean() * d.std()
+        
+        """
+        K-Center covering radius.
+        Maximum distance of any feature to its nearest selected center.
+        """
+        return torch.max(d).item()
+
+    
 
     @torch.no_grad()
     def run(self, X):
